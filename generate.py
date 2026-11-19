@@ -24,7 +24,7 @@ def get_weather():
         print(f"Errore meteo: {e}")
         return {"current": "--°C", "forecast": "N/D"}
 
-# 2. Santo del giorno (basato sul giorno dell'anno per stabilità)
+# 2. Santo del giorno
 def get_saint():
     saints = {
         "01-01": "Maria SS. Madre di Dio", "01-06": "Epifania del Signore", "03-19": "San Giuseppe",
@@ -35,7 +35,7 @@ def get_saint():
     today_key = datetime.now().strftime("%m-%d")
     return saints.get(today_key, "Santo del Giorno protettore della famiglia")
 
-# 3. Aforisma del giorno (ruota in base al giorno dell'anno)
+# 3. Aforisma del giorno (Corretto con tm_yday)
 def get_aphorism():
     quotes = [
         "Il modo per iniziare è smettere di parlare e iniziare a fare. (Walt Disney)",
@@ -46,7 +46,7 @@ def get_aphorism():
         "Agisci come se quello che fai potesse fare la differenza. Lo fa. (William James)",
         "L'istruzione è l'arma più potente che puoi usare per cambiare il mondo. (Nelson Mandela)"
     ]
-    day_of_year = datetime.now().timetuple().yday
+    day_of_year = datetime.now().timetuple().tm_yday
     return quotes[day_of_year % len(quotes)]
 
 # 4. Calendario iCal
@@ -99,7 +99,6 @@ def main():
     tz = pytz.timezone('Europe/Rome')
     last_update = datetime.now(tz).strftime("%d/%m/%Y %H:%M")
     
-    # Foto del giorno giornaliera tramite Picsum (usa la data come seme per cambiare ogni giorno)
     day_seed = datetime.now().strftime("%Y%m%d")
     photo_url = f"https://picsum.photos/seed/{day_seed}/758/300"
     
@@ -109,7 +108,6 @@ def main():
     else:
         html_template = "<html><body><h1>Errore template</h1></body></html>"
     
-    # Sostituzione segnaposto
     html_content = html_template.replace("{{TEMP_CURRENT}}", weather["current"])
     html_content = html_content.replace("{{TEMP_FORECAST}}", weather["forecast"])
     html_content = html_content.replace("{{SAINT}}", saint)
