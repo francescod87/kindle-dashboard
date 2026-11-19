@@ -70,17 +70,21 @@ def main():
     weather = get_weather()
     events_list = get_calendar()
     
+    # Orario corrente per forzare l'aggiornamento grafico dell'immagine
+    tz = pytz.timezone('Europe/Rome')
+    last_update = datetime.now(tz).strftime("%d/%m/%Y %H:%M")
+    
     # Leggi il template HTML dal repository
     if os.path.exists("template.html"):
         with open("template.html", "r", encoding="utf-8") as f:
             html_template = f.read()
     else:
-        # Template di emergenza se il file non viene trovato
-        html_template = "<html><body style='font-family:sans-serif; padding:40px;'><h1>Dashboard Kindle</h1><p>Temperatura: {{TEMP}}</p><ul>{{EVENTS}}</ul></body></html>"
+        html_template = "<html><body style='font-family:sans-serif; padding:40px;'><h1>Dashboard Kindle</h1><p>Aggiornato il: {{UPDATE_TIME}}</p><p>Temperatura: {{TEMP}}</p><ul>{{EVENTS}}</ul></body></html>"
     
-    # Sostituisci i placeholder nel template
+    # Sostituisci i placeholder nel template (inclusa la gestione di eventuali tag personalizzati)
     html_content = html_template.replace("{{TEMP}}", weather["temp"])
     html_content = html_content.replace("{{EVENTS}}", events_list)
+    html_content = html_content.replace("{{UPDATE_TIME}}", last_update)
     
     # Scrivi il file index.html locale
     with open("index.html", "w", encoding="utf-8") as f:
