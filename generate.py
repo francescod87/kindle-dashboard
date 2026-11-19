@@ -12,26 +12,26 @@ ICAL_URL = os.environ.get("ICAL_URL", "")
 # 1. Recupero Meteo (Open-Meteo)
 def get_weather():
     try:
-        url = f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto"
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&current=temperature_2m,weather_code&timezone=auto"
         res = requests.get(url).json()
         current_temp = res['current']['temperature_2m']
-        return {"temp": current_temp}
+        return {"temp": f"{current_temp}°C"}
     except Exception as e:
         print(f"Errore meteo: {e}")
-        return {"temp": "--"}
+        return {"temp": "--°C"}
 
 # 2. Recupero Calendario (iCal)
 def get_calendar():
-    events = []
+    events_html = ""
     try:
         if ICAL_URL:
-            # Sostituisci webcal:// con https:// se necessario
             url = ICAL_URL.replace("webcal://", "https://")
             cal_data = requests.get(url).text
             cal = Calendar.from_ical(cal_data)
             
             tz = pytz.timezone('Europe/Rome')
             now = datetime.now(tz)
+            events = []
             
             for component in cal.walk():
                 if component.name == "VEVENT":
@@ -45,34 +45,44 @@ def get_calendar():
                             else:
                                 dt = dt.astimezone(tz)
                         else:
-                            # Se è una data secca (tutto il giorno)
                             continue
                         
-                        # Prendi gli eventi da adesso in poi
                         if dt >= now:
                             events.append({
                                 "title": str(summary),
                                 "time": dt.strftime("%H:%M")
                             })
-            # Ordina e prendi i primi 4
+            
             events = sorted(events, key=lambda x: x['time'])[:4]
+            if events:
+                for ev in events:
+                    events_html += f"<li><b>{ev['time']}</b> - {ev['title']}</li>"
+            else:
+                events_html = "<li>Nessun evento imminente</li>"
     except Exception as e:
         print(f"Errore calendario: {e}")
-    return events
+        events_html = "<li>Errore caricamento calendario</li>"
+    
+    return events_html
 
 # Generazione della pagina HTML e salvataggio immagine tramite Playwright
 def main():
     weather = get_weather()
-    events = get_calendar()
+    events_list = get_calendar()
     
-    # Leggi il template HTML
-    with open("template.html", "r", encoding="utf-8") as f:
-        html_template = f.read()
+    # Leggi il template HTML dal repository
+    if os.path.exists("template.html"):
+        with open("template.html", "r", encoding="utf-8") as f:
+            html_template = f.read()
+    else:
+        # Template di emergenza se il file non viene trovato
+        html_template = "<html><body style='font-family:sans-serif; padding:40px;'><h1>Dashboard Kindle</h1><p>Temperatura: {{TEMP}}</p><ul>{{EVENTS}}</ul></body></html>"
     
-    # Inserisci i dati dinamici nel template (personalizza in base al tuo HTML)
-    html_content = html_template.replace("{{TEMP}}", str(weather["temp"]))
+    # Sostituisci i placeholder nel template
+    html_content = html_template.replace("{{TEMP}}", weather["temp"])
+    html_content = html_content.replace("{{EVENTS}}", events_list)
     
-    # Scrivi un file temporaneo renderizzato
+    # Scrivi il file index.html locale
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
         
@@ -84,7 +94,7 @@ def main():
         page.goto(f"file://{os.path.abspath('index.html')}")
         page.screenshot(path="dashboard.png")
         browser.close()
-    print("Dashboard generata con successo!")
+    print("Dashboard generata e salvata correttamente!")
 
 if __name__ == "__main__":
     main()
