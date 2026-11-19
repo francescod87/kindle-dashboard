@@ -4,23 +4,20 @@ from icalendar import Calendar
 from datetime import datetime
 import pytz
 
-# Leggi i Secret da GitHub
 LAT = os.environ.get("LAT", "43.7696")
 LON = os.environ.get("LON", "11.2558")
 ICAL_URL = os.environ.get("ICAL_URL", "")
 
-# 1. Recupero Meteo (Open-Meteo)
 def get_weather():
     try:
         url = f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&current=temperature_2m,weather_code&timezone=auto"
         res = requests.get(url).json()
         current_temp = res['current']['temperature_2m']
-        return {"temp": f"{current_temp}°C"}
+        return f"{current_temp}°C"
     except Exception as e:
         print(f"Errore meteo: {e}")
-        return {"temp": "--°C"}
+        return "--°C"
 
-# 2. Recupero Calendario (iCal)
 def get_calendar():
     events_html = ""
     try:
@@ -28,7 +25,6 @@ def get_calendar():
             url = ICAL_URL.replace("webcal://", "https://")
             cal_data = requests.get(url).text
             cal = Calendar.from_ical(cal_data)
-            
             tz = pytz.timezone('Europe/Rome')
             now = datetime.now(tz)
             events = []
@@ -46,13 +42,11 @@ def get_calendar():
                                 dt = dt.astimezone(tz)
                         else:
                             continue
-                        
                         if dt >= now:
                             events.append({
                                 "title": str(summary),
                                 "time": dt.strftime("%H:%M")
                             })
-            
             events = sorted(events, key=lambda x: x['time'])[:4]
             if events:
                 for ev in events:
@@ -62,35 +56,53 @@ def get_calendar():
     except Exception as e:
         print(f"Errore calendario: {e}")
         events_html = "<li>Errore caricamento calendario</li>"
-    
     return events_html
 
-# Generazione della pagina HTML e salvataggio immagine tramite Playwright
 def main():
-    weather = get_weather()
-    events_list = get_calendar()
+    temp = get_weather()
+    events = get_calendar()
     
-    # Orario corrente per forzare l'aggiornamento grafico dell'immagine
     tz = pytz.timezone('Europe/Rome')
-    last_update = datetime.now(tz).strftime("%d/%m/%Y %H:%M")
+    last_update = datetime.now(tz).strftime("%d/%m/%Y %H:%M:%S")
     
-    # Leggi il template HTML dal repository
-    if os.path.exists("template.html"):
-        with open("template.html", "r", encoding="utf-8") as f:
-            html_template = f.read()
-    else:
-        html_template = "<html><body style='font-family:sans-serif; padding:40px;'><h1>Dashboard Kindle</h1><p>Aggiornato il: {{UPDATE_TIME}}</p><p>Temperatura: {{TEMP}}</p><ul>{{EVENTS}}</ul></body></html>"
+    # HTML di test forzato per verificare la generazione corretta dell'immagine
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {{
+                width: 600px;
+                height: 800px;
+                margin: 0;
+                padding: 40px;
+                background-color: white;
+                color: black;
+                font-family: Arial, sans-serif;
+                box-sizing: border-box;
+            }}
+            h1 {{ font-size: 32px; border-bottom: 2px solid black; padding-bottom: 10px; }}
+            .box {{ font-size: 24px; margin-top: 20px; }}
+            ul {{ font-size: 20px; line-height: 1.6; }}
+            .footer {{ position: absolute; bottom: 40px; font-size: 16px; color: #555; }}
+        </style>
+    </head>
+    <body>
+        <h1>Kindle Dashboard</h1>
+        <div class="box"><b>Temperatura:</b> {temp}</div>
+        <div class="box"><b>Prossimi eventi:</b></div>
+        <ul>
+            {events}
+        </ul>
+        <div class="footer">Ultimo aggiornamento: {last_update}</div>
+    </body>
+    </html>
+    """
     
-    # Sostituisci i placeholder nel template (inclusa la gestione di eventuali tag personalizzati)
-    html_content = html_template.replace("{{TEMP}}", weather["temp"])
-    html_content = html_content.replace("{{EVENTS}}", events_list)
-    html_content = html_content.replace("{{UPDATE_TIME}}", last_update)
-    
-    # Scrivi il file index.html locale
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
         
-    # Usa Playwright per catturare lo screenshot
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -98,7 +110,7 @@ def main():
         page.goto(f"file://{os.path.abspath('index.html')}")
         page.screenshot(path="dashboard.png")
         browser.close()
-    print("Dashboard generata e salvata correttamente!")
+    print("Dashboard generata correttamente!")
 
 if __name__ == "__main__":
     main()
