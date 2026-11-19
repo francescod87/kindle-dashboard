@@ -31,7 +31,26 @@
   .weather-temp { font-size: 46px; font-weight: 900; }
   .weather-desc { font-size: 18px; }
 
-  /* Blocco Agenda */
+  /* Foto del giorno / Immagine */
+  .photo-section {
+    width: 100%;
+    height: 360px;
+    border: 3px solid #000;
+    margin-bottom: 16px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f0;
+  }
+  .photo-section img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) contrast(130%);
+  }
+
+  /* Blocco Agenda (A tutta larghezza) */
   .agenda-card {
     border: 2px solid #000;
     padding: 14px;
@@ -62,7 +81,7 @@
 </style>
 </head>
 <body>
-  <!-- Header con Data e Meteo -->
+  <!-- Header: Data e Meteo -->
   <div class="header">
     <div class="date-box">
       <h1>Dashboard</h1>
@@ -73,7 +92,12 @@
     </div>
   </div>
 
-  <!-- Blocco Agenda / Eventi -->
+  <!-- Sezione Foto / Immagine opzionale -->
+  <div class="photo-section">
+    <div style="font-size: 20px; color: #666; font-weight: bold;">Dashboard Kindle</div>
+  </div>
+
+  <!-- Blocco Agenda -->
   <div class="agenda-card">
     <div class="card-title">Prossimi Eventi</div>
     <ul>
