@@ -83,7 +83,7 @@ def main():
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 600, "height": 800})
+        page = browser.new_page(viewport={"width": 758, "height": 1024})
         page.goto(f"file://{os.path.abspath('index.html')}")
         page.screenshot(path="dashboard.png")
         browser.close()
