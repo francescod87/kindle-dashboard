@@ -29,8 +29,6 @@ jobs:
           LAT: ${{ secrets.LAT }}
           LON: ${{ secrets.LON }}
           ICAL_URL: ${{ secrets.ICAL_URL }}
-          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
-          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
         run: python generate.py
 
       - name: Pubblica immagine aggiornata
