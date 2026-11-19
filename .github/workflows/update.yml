@@ -21,7 +21,7 @@ jobs:
 
       - name: Installa dipendenze
         run: |
-          pip install requests icalendar playwright
+          pip install requests icalendar playwright pytz
           playwright install chromium
 
       - name: Genera dashboard.png
