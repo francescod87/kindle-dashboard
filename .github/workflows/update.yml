@@ -1,0 +1,42 @@
+name: Aggiorna Dashboard Kindle
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Ogni ora al minuto 0
+  workflow_dispatch:    # Permette l'avvio manuale
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Imposta Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installa dipendenze
+        run: |
+          pip install requests icalendar playwright
+          playwright install chromium
+
+      - name: Genera dashboard.png
+        env:
+          LAT: ${{ secrets.LAT }}
+          LON: ${{ secrets.LON }}
+          ICAL_URL: ${{ secrets.ICAL_URL }}
+          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
+        run: python generate.py
+
+      - name: Pubblica immagine aggiornata
+        run: |
+          git config user.name "Kindle Bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add dashboard.png
+          git commit -m "Aggiornamento dashboard" || exit 0
+          git push
