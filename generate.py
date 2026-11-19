@@ -65,40 +65,17 @@ def main():
     tz = pytz.timezone('Europe/Rome')
     last_update = datetime.now(tz).strftime("%d/%m/%Y %H:%M:%S")
     
-    # HTML di test forzato per verificare la generazione corretta dell'immagine
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <style>
-            body {{
-                width: 600px;
-                height: 800px;
-                margin: 0;
-                padding: 40px;
-                background-color: white;
-                color: black;
-                font-family: Arial, sans-serif;
-                box-sizing: border-box;
-            }}
-            h1 {{ font-size: 32px; border-bottom: 2px solid black; padding-bottom: 10px; }}
-            .box {{ font-size: 24px; margin-top: 20px; }}
-            ul {{ font-size: 20px; line-height: 1.6; }}
-            .footer {{ position: absolute; bottom: 40px; font-size: 16px; color: #555; }}
-        </style>
-    </head>
-    <body>
-        <h1>Kindle Dashboard</h1>
-        <div class="box"><b>Temperatura:</b> {temp}</div>
-        <div class="box"><b>Prossimi eventi:</b></div>
-        <ul>
-            {events}
-        </ul>
-        <div class="footer">Ultimo aggiornamento: {last_update}</div>
-    </body>
-    </html>
-    """
+    # Leggi il tuo template.html personalizzato dal repository
+    if os.path.exists("template.html"):
+        with open("template.html", "r", encoding="utf-8") as f:
+            html_template = f.read()
+    else:
+        html_template = "<html><body><h1>Attenzione: template.html non trovato!</h1></body></html>"
+    
+    # Sostituisce i segnaposto con i dati reali
+    html_content = html_template.replace("{{TEMP}}", temp)
+    html_content = html_content.replace("{{EVENTS}}", events)
+    html_content = html_content.replace("{{UPDATE_TIME}}", last_update)
     
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
@@ -110,7 +87,7 @@ def main():
         page.goto(f"file://{os.path.abspath('index.html')}")
         page.screenshot(path="dashboard.png")
         browser.close()
-    print("Dashboard generata correttamente!")
+    print("Dashboard generata con successo usando template.html!")
 
 if __name__ == "__main__":
     main()
